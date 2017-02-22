@@ -1,0 +1,8 @@
+---
+- hosts: vagrants
+  become: true
+  user: vagrant
+  gather_facts: no
+  roles:
+    - { role: samba, tags: samba }
+

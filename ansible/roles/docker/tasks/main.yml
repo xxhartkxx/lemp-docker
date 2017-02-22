@@ -1,0 +1,41 @@
+# file: roles/docker/tasks/main.yml
+
+- name: add epel repository
+  yum: name=epel-release state=present
+
+- name: add docker repository
+  copy: src=docker.repo dest=/etc/yum.repos.d/ mode=644
+
+- name: install docker package
+  yum: name={{ item }} state=present
+  with_items:
+    - docker-engine
+    - python-pip
+    - rsync
+
+- name: start docker
+  service: name=docker state=started enabled=yes
+
+- name: install docker-compose
+  pip: name=docker-compose state=latest
+
+- name: get ansible user home directory
+  shell: 'getent passwd "{{ansible_ssh_user}}" | cut -d: -f6'
+  register: ansible_home_result
+
+- name: set the fact for the other scripts to use
+  set_fact: ansible_home='{{ansible_home_result.stdout}}'
+
+- name: volume directory sync
+  synchronize:
+    src: volumes
+    dest: "{{ ansible_home }}"
+    recursive: yes
+    rsync_opts:
+      - "--update"
+
+- name: volume directory and file permission change
+  shell: find {{ ansible_home }}/volumes -type d -exec chmod 755 {} + && find {{ ansible_home }}/volumes -type f -exec chmod 644 {} +
+
+- name: volume directory symbolic
+  file: src={{ ansible_home}}/volumes dest=/volumes state=link

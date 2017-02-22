@@ -1,0 +1,8 @@
+# file: roles/redis/tasks/main.yml
+
+- name: add remi repository
+  yum: name=http://rpms.famillecollet.com/enterprise/remi-release-7.rpm state=installed
+
+- name: install redis packages
+  yum: name=redis state=present enablerepo=remi
+

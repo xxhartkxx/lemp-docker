@@ -1,0 +1,66 @@
+# file: roles/git/tasks/main.yml
+
+- name: install git packages
+  yum: name={{ item }} state=present
+  with_items:
+    - gcc
+    - gcc-c++
+    - autoconf
+    - automake
+    - kernel-devel
+    - ncurses-devel
+    - gettext
+    - zlib-devel
+    - curl-devel
+    - perl-ExtUtils-MakeMaker
+    - openssl-devel
+    - perl
+
+- name: check yum git installed
+  shell: /usr/bin/git --version
+  register: yum_git
+  ignore_errors: true
+
+- name: check src git installed
+  shell: /usr/local/bin/git --version
+  register: src_git
+  ignore_errors: true
+  when: yum_git|failed
+
+- name: install yum git
+  yum: name=git state=installed
+  when: (yum_git|failed) and (src_git.stderr != "")
+
+- name: git source clone
+  git: repo=https://github.com/git/git.git dest=/tmp/git force=yes update=yes
+  when: src_git.stderr != ""
+
+- name: check git latest version
+  shell: git fetch --tags && git describe --abbrev=0 chdir=/tmp/git
+  register: latest_branch
+  when: src_git.stderr != ""
+
+- name: git checkout latest version tag
+  shell: git checkout -b t/{{ latest_branch.stdout }} refs/tags/{{ latest_branch.stdout }} chdir=/tmp/git
+  when: src_git.stderr != ""
+
+- name: remove yum git
+  yum: name=git state=absent
+  when: src_git.stderr != ""
+
+- name: make configure
+  shell: make configure chdir=/tmp/git
+  when: src_git.stderr != ""
+
+- name: make configure
+  shell: ./configure chdir=/tmp/git
+  when: src_git.stderr != ""
+
+- name: make all
+  shell: make all chdir=/tmp/git
+  when: src_git.stderr != ""
+
+- name: make install
+  shell: make install chdir=/tmp/git
+  when: src_git.stderr != ""
+

@@ -1,0 +1,13 @@
+---
+- hosts: vagrants
+  become: true
+  user: vagrant
+  gather_facts: no
+  roles:
+    - { role: init, tags: init }
+    - { role: docker, tags: docker }
+    - { role: git, tags: git }
+    - { role: php, tags: php }
+    - { role: mysql, tags: mysql }
+    - { role: redis, tags: redis }
+

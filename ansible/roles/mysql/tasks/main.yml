@@ -1,0 +1,8 @@
+# file: roles/mysql/tasks/main.yml
+
+- name: add mysql-community repository
+  yum: name=http://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm state=present
+
+- name: install mysql packages
+  yum: name=mysql state=present enablerepo=mysql56-community disablerepo=mysql57-community
+

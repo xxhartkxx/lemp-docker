@@ -1,0 +1,31 @@
+# file: roles/init/tasks/main.yml
+
+- name: yum update
+  yum: name=* state=latest
+
+- name: install packages
+  yum: name={{ item }} state=present
+  with_items:
+    - libselinux-python
+    - telnet
+
+- name: disable selinux
+  selinux: policy=targeted state=disabled
+
+- name: change timezone to Asia/Tokyo
+  shell: timedatectl set-timezone Asia/Tokyo
+
+- name: disable UseDNS sshd
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    backrefs: yes
+    regexp: '^#(UseDNS)(.*)(yes)'
+    line: '\1\2no'
+
+- name: restart sshd
+  service: name=sshd state=restarted
+
+- name: tab completion
+  lineinfile:
+    dest=/home/vagrant/.bashrc
+    line="complete -cf sudo"

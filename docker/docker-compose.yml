@@ -1,0 +1,65 @@
+mysql:
+  container_name: mysql
+  image: mysql:5.6
+  environment:
+    - TERM=xterm
+    - MYSQL_ROOT_PASSWORD=root
+  ports:
+    - "3306:3306"
+  volumes:
+    - /volumes/configs/mysql/custom.cnf:/etc/mysql/conf.d/custom.cnf:ro
+  restart: always
+
+redis:
+  container_name: redis
+  build: Dockerfile/redis
+  environment:
+    - TERM=xterm
+  ports:
+    - "6379:6379"
+  volumes:
+    - /volumes/configs/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+  restart: always
+
+memcached:
+  container_name: memcached
+  image: memcached
+  environment:
+    - TERM=xterm
+  ports:
+    - "11211:11211"
+  command: memcached -m 64
+  restart: always
+
+php-fpm:
+  container_name: php-fpm
+  build: Dockerfile/php-fpm
+  environment:
+    - TERM=xterm
+  ports:
+    - "9000:9000"
+  links:
+    - mysql:mysql.my.local
+    - redis:redis.my.local
+    - memcached:memcached.my.local
+  volumes:
+    - /volumes/configs/php/php.ini:/usr/local/etc/php/conf.d/php.ini:ro
+    - /volumes/logs/mail:/var/log/mail
+    - /volumes/workspace:/usr/share/www
+  restart: always
+
+nginx:
+  container_name: nginx
+  image: nginx:stable
+  environment:
+    - TERM=xterm
+  ports:
+    - "80:80"
+  links:
+    - php-fpm:php-fpm.my.local
+  volumes:
+    - /volumes/configs/nginx/conf.d:/etc/nginx/conf.d:ro
+    - /volumes/logs/nginx:/var/log/nginx
+    - /volumes/workspace:/usr/share/www
+  restart: always
+

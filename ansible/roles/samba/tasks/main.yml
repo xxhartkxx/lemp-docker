@@ -1,0 +1,11 @@
+# file: roles/samba/tasks/main.yml
+
+- name: install samba packages
+  yum: name=samba state=present
+
+- name: copy smb.conf
+  copy: src=smb.conf dest=/etc/samba/smb.conf mode=644
+
+- name: restart samba
+  service: name=smb state=restarted enabled=yes
+
